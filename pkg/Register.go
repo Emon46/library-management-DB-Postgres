@@ -29,6 +29,7 @@ func Register(w http.ResponseWriter, r *http.Request)  {
 				Status: 502,
 				Error: "A user is already registered with this mail",
 				Success: "false",
+				Message: "register failed",
 
 			}
 			w.WriteHeader(http.StatusBadGateway)
@@ -40,7 +41,7 @@ func Register(w http.ResponseWriter, r *http.Request)  {
 	user.ID = len(Users)+1
 	user.CreateUser()
 	myResponse := MyData{
-		Status: 201,
+		Status: http.StatusOK,
 		Error: "null",
 		Message : "created new user",
 		Success: "true",
