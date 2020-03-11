@@ -5,11 +5,11 @@ import (
 	"net/http"
 )
 
-func Login(w http.ResponseWriter, r *http.Request)  {
+func Login(w http.ResponseWriter, r *http.Request) {
 	var user User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
-		http.Error(w,err.Error(),404)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
@@ -18,24 +18,24 @@ func Login(w http.ResponseWriter, r *http.Request)  {
 			myResponse := MyData{
 				Status: http.StatusOK,
 
-				Error: "null",
+				Error:   "null",
 				Success: "true",
 				Message: "Logged in successfully",
-				Data: userVar,
+				Data:    userVar,
 			}
-			w.WriteHeader(http.StatusBadGateway)
+			w.WriteHeader(http.StatusOK)
 			json.NewEncoder(w).Encode(myResponse)
 			return
 		}
 	}
 	myResponse := MyData{
-		Status: http.StatusBadRequest,
-		Error: "password or username didn't match",
+		Status:  http.StatusUnauthorized,
+		Error:   "password or username didn't match",
 		Success: "false",
 		Message: "Log in failed",
-		Data: nil,
+		Data:    nil,
 	}
-	w.WriteHeader(http.StatusBadGateway)
+	w.WriteHeader(http.StatusUnauthorized)
 	json.NewEncoder(w).Encode(myResponse)
 	return
 }

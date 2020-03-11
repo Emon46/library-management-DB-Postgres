@@ -1,13 +1,16 @@
 package pkg
+
 type User struct {
-	ID int
-	Name string `json:"name"`
-	Mail string `json:"mail"`
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	Mail     string `json:"mail"`
 	Password string `json:"password"`
-	PhoneNo string `json:"phone_no"`
+	PhoneNo  string `json:"phone_no"`
 }
 
+var UserIdCount = 1
 var Users []User
+
 func (user *User) CreateUser() bool {
 
 	Users = append(Users, User{
