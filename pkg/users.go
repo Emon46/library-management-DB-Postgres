@@ -75,3 +75,52 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(myResponse)
 	return
 }
+
+func EditUserProfile() http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		var user User
+		err := json.NewDecoder(r.Body).Decode(&user)
+
+		if err != nil {
+			http.Error(w, err.Error(), 404)
+			return
+		}
+
+		userMail, _, ok := r.BasicAuth()
+		if ok {
+
+			for i, userVar := range Users {
+				if userVar.Mail == userMail {
+					//fmt.Println("dfssssssssssssss ", user.Name)
+					//edit
+					if user.Name != "" {
+						//fmt.Println("name ", user.Name, userVar.ID, i, userVar.Name, Users[i].Name)
+						Users[i].Name = user.Name
+					}
+					if user.PhoneNo != "" {
+						//fmt.Println("phn ", user.PhoneNo)
+						Users[userVar.ID].PhoneNo = user.PhoneNo
+					}
+
+					if user.Password != "" {
+						//fmt.Println("pass ", user.Password)
+						Users[userVar.ID].Password = user.Password
+					}
+
+					myResponse := MyData{
+						Status: http.StatusOK,
+
+						Error:   nil,
+						Success: "true",
+						Message: "Found a user",
+						Data:    Users[i],
+					}
+					w.WriteHeader(http.StatusOK)
+					json.NewEncoder(w).Encode(myResponse)
+					return
+				}
+			}
+		}
+
+	})
+}

@@ -15,6 +15,7 @@ func Middleware(next http.Handler) http.Handler {
 	return next
 }
 func init() {
+
 	pkg.Users = append(pkg.Users, pkg.User{
 		ID:       pkg.UserIdCount,
 		Name:     "demo user",
@@ -44,6 +45,8 @@ func main() {
 		Methods("POST")
 	r.HandleFunc("/user/{user_id}", pkg.UserProfile).
 		Methods("Get")
+	r.Handle("/edit-profile/{user_id}", AuthMiddleware(pkg.EditUserProfile(), "user")).
+		Methods("PATCH")
 	r.Handle("/book", AuthMiddleware(book.AddNewBook(), "admin")).
 		Methods("POST")
 	r.HandleFunc("/book", book.ShowAllBooks).
