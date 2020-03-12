@@ -18,7 +18,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		if userVar.Mail == user.Mail {
 			myResponse := MyData{
 				Status:  502,
-				Error:   "A user is already registered with this mail",
+				Error:   err,
 				Success: "false",
 				Message: "register failed",
 			}
@@ -33,7 +33,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	user.CreateUser()
 	myResponse := MyData{
 		Status:  http.StatusCreated,
-		Error:   "null",
+		Error:   nil,
 		Message: "created new user",
 		Success: "true",
 		Data:    Users,

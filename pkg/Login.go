@@ -18,7 +18,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			myResponse := MyData{
 				Status: http.StatusOK,
 
-				Error:   "null",
+				Error:   nil,
 				Success: "true",
 				Message: "Logged in successfully",
 				Data:    userVar,
@@ -30,7 +30,7 @@ func Login(w http.ResponseWriter, r *http.Request) {
 	}
 	myResponse := MyData{
 		Status:  http.StatusUnauthorized,
-		Error:   "password or username didn't match",
+		Error:   err,
 		Success: "false",
 		Message: "Log in failed",
 		Data:    nil,
