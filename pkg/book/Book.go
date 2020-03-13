@@ -7,16 +7,16 @@ type Book struct {
 	Available bool   `json:"available"`
 }
 
-var bookIDCount = 0
+var BookIDCount = 0
 var Books = make(map[int]Book)
 
 func (book *Book) addBook() {
 
-	bookIDCount++
-	book.Id = bookIDCount
+	BookIDCount++
+	book.Id = BookIDCount
 	book.Available = true
 
-	Books[bookIDCount] = Book{
+	Books[BookIDCount] = Book{
 		Id:        book.Id,
 		BookName:  book.BookName,
 		Author:    book.Author,

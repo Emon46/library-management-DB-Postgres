@@ -35,6 +35,22 @@ func init() {
 	})
 	pkg.UserIdCount++
 
+	book.BookIDCount++
+	book.Books[book.BookIDCount] = book.Book{
+		Id:        book.BookIDCount,
+		BookName:  "himu",
+		Author:    "humayon ahmed",
+		Available: true,
+	}
+
+	book.BookIDCount++
+	book.Books[book.BookIDCount] = book.Book{
+		Id:        book.BookIDCount,
+		BookName:  "misir ali",
+		Author:    "humayon ahmed",
+		Available: true,
+	}
+
 }
 func main() {
 	//tokenString, err := pkg.GenerateJWT("admin@mail.com", "admin", 1)
