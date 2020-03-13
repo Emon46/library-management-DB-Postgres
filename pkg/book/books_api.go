@@ -2,6 +2,7 @@ package book
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"libraryManagement/pkg"
 	"net/http"
@@ -70,99 +71,149 @@ func ShowBook(w http.ResponseWriter, r *http.Request) {
 	//fmt.Println("sdgh")
 
 }
-func AddNewBook() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		var book Book
-		err := json.NewDecoder(r.Body).Decode(&book)
-		if err != nil {
-			return
-		}
-		for _, bookVar := range Books {
-			if bookVar.BookName == book.BookName && bookVar.Author == book.Author {
-				return
-			}
-		}
-
-		book.addBook()
-
+func AddNewBook(w http.ResponseWriter, r *http.Request) {
+	//_, err := strconv.Atoi(r.Header.Get("current_user_id"))
+	currentUserType := r.Header.Get("current_user_type")
+	if currentUserType != "admin" {
 		myResponse := pkg.MyData{
-			Status:  http.StatusCreated,
-			Error:   nil,
-			Message: "created new user",
+			Status:  http.StatusNotAcceptable,
+			Error:   errors.New("user type didn't match"),
+			Message: "only admin can add new book ",
 			Success: "true",
 			Data:    Books,
 		}
 
-		w.WriteHeader(http.StatusCreated)
+		w.WriteHeader(http.StatusNotAcceptable)
 		json.NewEncoder(w).Encode(myResponse)
-	})
+		return
+	}
+	var book Book
+	err1 := json.NewDecoder(r.Body).Decode(&book)
+	if err1 != nil {
+		return
+	}
+	for _, bookVar := range Books {
+		if bookVar.BookName == book.BookName && bookVar.Author == book.Author {
+			return
+		}
+	}
+
+	book.addBook()
+
+	myResponse := pkg.MyData{
+		Status:  http.StatusCreated,
+		Error:   nil,
+		Message: "created new user",
+		Success: "true",
+		Data:    Books,
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(myResponse)
+
 }
-func AddNewPurchase() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		var bookHistory BookHistory
-		json.NewDecoder(r.Body).Decode(&bookHistory)
-		bookHistory.NewPurchase()
-
+func AddNewPurchase(w http.ResponseWriter, r *http.Request) {
+	//_, err := strconv.Atoi(r.Header.Get("current_user_id"))
+	currentUserType := r.Header.Get("current_user_type")
+	if currentUserType != "admin" {
 		myResponse := pkg.MyData{
-			Status:  http.StatusCreated,
-			Error:   nil,
-			Message: "added this book to purchase list",
+			Status:  http.StatusNotAcceptable,
+			Error:   errors.New("user type didn't match"),
+			Message: "only admin can update purchase book info",
 			Success: "true",
-			Data:    BooksHistoryList,
+			Data:    Books,
 		}
 
-		w.WriteHeader(http.StatusCreated)
+		w.WriteHeader(http.StatusNotAcceptable)
 		json.NewEncoder(w).Encode(myResponse)
-	})
+		return
+	}
+	var bookHistory BookHistory
+	json.NewDecoder(r.Body).Decode(&bookHistory)
+	bookHistory.NewPurchase()
+
+	myResponse := pkg.MyData{
+		Status:  http.StatusCreated,
+		Error:   nil,
+		Message: "added this book to purchase list",
+		Success: "true",
+		Data:    BooksHistoryList,
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(myResponse)
 
 }
-func ReturnBook() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		//fmt.Println("kdsfh")
-		var bookHistory BookHistory
-		json.NewDecoder(r.Body).Decode(&bookHistory)
-		bookHistory.ReturnBookMethod()
-
+func ReturnBook(w http.ResponseWriter, r *http.Request) {
+	//_, err := strconv.Atoi(r.Header.Get("current_user_id"))
+	currentUserType := r.Header.Get("current_user_type")
+	if currentUserType != "admin" {
 		myResponse := pkg.MyData{
-			Status:  http.StatusCreated,
-			Error:   nil,
-			Message: "added this book to purchase list",
+			Status:  http.StatusNotAcceptable,
+			Error:   errors.New("user type didn't match"),
+			Message: "only admin can update return book info",
 			Success: "true",
-			Data:    BooksHistoryList,
+			Data:    Books,
 		}
 
-		w.WriteHeader(http.StatusCreated)
+		w.WriteHeader(http.StatusNotAcceptable)
 		json.NewEncoder(w).Encode(myResponse)
-	})
+		return
+	}
+	//fmt.Println("kdsfh")
+	var bookHistory BookHistory
+	json.NewDecoder(r.Body).Decode(&bookHistory)
+	bookHistory.ReturnBookMethod()
+
+	myResponse := pkg.MyData{
+		Status:  http.StatusCreated,
+		Error:   nil,
+		Message: "added this book to purchase list",
+		Success: "true",
+		Data:    BooksHistoryList,
+	}
+
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(myResponse)
 
 }
-func DeleteBook() http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-
-		book_id, _ := strconv.Atoi(mux.Vars(r)["book_id"])
-		fmt.Println(book_id)
-
-		delete(Books, book_id)
-
-		delete(BooksHistoryList, book_id)
-		//fmt.Println(BooksHistoryList)
-
+func DeleteBook(w http.ResponseWriter, r *http.Request) {
+	//_, err := strconv.Atoi(r.Header.Get("current_user_id"))
+	currentUserType := r.Header.Get("current_user_type")
+	if currentUserType != "admin" {
 		myResponse := pkg.MyData{
 			Status:  http.StatusResetContent,
-			Error:   nil,
-			Message: "successfully deleted",
+			Error:   errors.New("user type didn't match"),
+			Message: "only admin can delete",
 			Success: "true",
 			Data:    Books,
 		}
 
 		w.WriteHeader(http.StatusResetContent)
 		json.NewEncoder(w).Encode(myResponse)
-		//data, err := json.Marshal(myResponse)
-		//w.Write(data)
+		return
+	}
 
-	})
+	book_id, _ := strconv.Atoi(mux.Vars(r)["book_id"])
+	fmt.Println(book_id)
+
+	delete(Books, book_id)
+
+	delete(BooksHistoryList, book_id)
+	//fmt.Println(BooksHistoryList)
+
+	myResponse := pkg.MyData{
+		Status:  http.StatusResetContent,
+		Error:   nil,
+		Message: "successfully deleted",
+		Success: "true",
+		Data:    Books,
+	}
+
+	w.WriteHeader(http.StatusResetContent)
+	json.NewEncoder(w).Encode(myResponse)
+	//another approach
+	//data, err := json.Marshal(myResponse)
+	//w.Write(data)
 
 }

@@ -37,7 +37,14 @@ func init() {
 
 }
 func main() {
+	//tokenString, err := pkg.GenerateJWT("admin@mail.com", "admin", 1)
+	//if err == nil {
+	//	fmt.Println(tokenString)
+	//} else {
+	//	fmt.Println(err)
+	//}
 	r := mux.NewRouter()
+	r.Use(pkg.JwtMiddleWare)
 
 	r.HandleFunc("/login", pkg.Login).
 		Methods("GET")
@@ -45,9 +52,11 @@ func main() {
 		Methods("POST")
 	r.HandleFunc("/user/{user_id}", pkg.UserProfile).
 		Methods("Get")
-	r.Handle("/edit-profile/{user_id}", AuthMiddleware(pkg.EditUserProfile(), "user")).
+	r.HandleFunc("/edit-profile/{user_id}", pkg.EditUserProfile).
 		Methods("PATCH")
-	r.Handle("/book", AuthMiddleware(book.AddNewBook(), "admin")).
+	//r.Handle("/edit-profile/{user_id}", AuthMiddleware(pkg.EditUserProfile(), "user")).
+	//	Methods("PATCH")
+	r.HandleFunc("/book", book.AddNewBook).
 		Methods("POST")
 	r.HandleFunc("/book", book.ShowAllBooks).
 		Methods("Get")
@@ -55,11 +64,11 @@ func main() {
 		Methods("Get")
 	//http.HandleFunc("/df",fu)
 
-	r.Handle("/purchase-book", AuthMiddleware(book.AddNewPurchase(), "admin")).
+	r.HandleFunc("/purchase-book", book.AddNewPurchase).
 		Methods("POST")
-	r.Handle("/return-book", AuthMiddleware(book.ReturnBook(), "admin")).
+	r.HandleFunc("/return-book", book.ReturnBook).
 		Methods("PUT")
-	r.Handle("/delete-book/{book_id}", AuthMiddleware(book.DeleteBook(), "admin"))
+	r.HandleFunc("/delete-book/{book_id}", book.DeleteBook)
 	http.Handle("/", r)
 	srv := &http.Server{
 		Handler: r,

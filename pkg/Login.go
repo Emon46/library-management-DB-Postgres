@@ -15,13 +15,15 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	for _, userVar := range Users {
 		if userVar.Mail == user.Mail && userVar.Password == user.Password {
+			tokenString, err := GenerateJWT(userVar.Mail, userVar.UserType, userVar.ID)
+
 			myResponse := MyData{
 				Status: http.StatusOK,
 
-				Error:   nil,
+				Error:   err,
 				Success: "true",
 				Message: "Logged in successfully",
-				Data:    userVar,
+				Data:    tokenString,
 			}
 			w.WriteHeader(http.StatusOK)
 			json.NewEncoder(w).Encode(myResponse)
