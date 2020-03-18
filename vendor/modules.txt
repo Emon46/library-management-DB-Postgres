@@ -1,6 +1,3 @@
-# github.com/davecgh/go-spew v1.1.1
-## explicit
-github.com/davecgh/go-spew/spew
 # github.com/dgrijalva/jwt-go v3.2.0+incompatible
 ## explicit
 github.com/dgrijalva/jwt-go
@@ -20,4 +17,5 @@ github.com/lib/pq/scram
 # xorm.io/builder v0.3.6
 xorm.io/builder
 # xorm.io/core v0.7.2-0.20190928055935-90aeac8d08eb
+## explicit
 xorm.io/core

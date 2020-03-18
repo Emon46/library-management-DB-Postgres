@@ -7,6 +7,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/emon331046/libraryManagement/pkg/middleware"
+
 	"github.com/gorilla/mux"
 
 	"github.com/emon331046/libraryManagement/pkg/model"
@@ -28,29 +30,14 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	result := db.CreateUser(model.UserDbFormat(user))
 	if result == nil {
 		fmt.Println("***************crete user false***************")
-		myResponse := MyData{
-			Status:  http.StatusCreated,
-			Error:   nil,
-			Message: "cannot create  user",
-			Success: "true",
-			Data:    result,
-		}
 
 		w.WriteHeader(http.StatusCreated)
-		json.NewEncoder(w).Encode(myResponse)
+		json.NewEncoder(w).Encode(result)
 		return
 	}
 
-	myResponse := MyData{
-		Status:  http.StatusCreated,
-		Error:   nil,
-		Message: "created new user",
-		Success: "true",
-		Data:    result,
-	}
-
 	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(myResponse)
+	json.NewEncoder(w).Encode(result)
 
 }
 
@@ -59,40 +46,19 @@ func UserProfile(w http.ResponseWriter, r *http.Request) {
 	userId, err1 := strconv.Atoi(key)
 
 	if err1 != nil {
-		myResponse := MyData{
-			Status:  http.StatusBadRequest,
-			Error:   err1,
-			Message: "no match for this user",
-			Success: "true",
-			Data:    nil,
-		}
 		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(myResponse)
+		json.NewEncoder(w).Encode(nil)
 	}
 
 	userResult := db.GetUser(userId)
 	if userResult != nil {
-		myResponse := MyData{
-			Status:  http.StatusBadRequest,
-			Error:   err1,
-			Success: "false",
-			Message: "user available",
-			Data:    userResult,
-		}
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(myResponse)
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(userResult)
 		return
 	}
 
-	myResponse := MyData{
-		Status:  http.StatusBadRequest,
-		Error:   err1,
-		Success: "false",
-		Message: "No id available",
-		Data:    userResult,
-	}
 	w.WriteHeader(http.StatusBadRequest)
-	json.NewEncoder(w).Encode(myResponse)
+	json.NewEncoder(w).Encode(userResult)
 	return
 }
 
@@ -101,16 +67,9 @@ func EditUserProfile(w http.ResponseWriter, r *http.Request) {
 	currentUserType := r.Header.Get("current_user_type")
 	currentUserMail := r.Header.Get("current_user_mail")
 	if currentUserType != "user" {
-		myResponse := MyData{
-			Status:  http.StatusNotAcceptable,
-			Error:   errors.New("user type didn't match"),
-			Message: "only user can edit his profile info",
-			Success: "true",
-			Data:    nil,
-		}
 
 		w.WriteHeader(http.StatusNotAcceptable)
-		json.NewEncoder(w).Encode(myResponse)
+		json.NewEncoder(w).Encode(errors.New("type of user didn't match"))
 		return
 	}
 	if currentUserMail == "" {
@@ -119,45 +78,52 @@ func EditUserProfile(w http.ResponseWriter, r *http.Request) {
 		return
 	} else {
 
-		var user UserModel
+		var user model.UserModel
 		err1 := json.NewDecoder(r.Body).Decode(&user)
-
 		if err1 != nil {
 			http.Error(w, err1.Error(), 404)
 			return
 		}
+		user.Mail = currentUserMail
+		resultUser, err := db.UpdateUserProfile(model.UserDbFormat(user))
+		if err == nil {
 
-		for i, userVar := range Users {
-			if userVar.Mail == currentUserMail {
-				//fmt.Println("dfssssssssssssss ", user.Name)
-				//edit
-				if user.Name != "" {
-					//fmt.Println("name ", user.Name, userVar.ID, i, userVar.Name, Users[i].Name)
-					Users[i].Name = user.Name
-				}
-				if user.PhoneNo != "" {
-					//fmt.Println("phn ", user.PhoneNo)
-					Users[userVar.ID].PhoneNo = user.PhoneNo
-				}
-
-				if user.Password != "" {
-					//fmt.Println("pass ", user.Password)
-					Users[userVar.ID].Password = user.Password
-				}
-
-				myResponse := MyData{
-					Status: http.StatusOK,
-
-					Error:   nil,
-					Success: "true",
-					Message: "updated user",
-					Data:    Users[i],
-				}
-				w.WriteHeader(http.StatusOK)
-				json.NewEncoder(w).Encode(myResponse)
-				return
-			}
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(resultUser)
+			return
 		}
+
 	}
+
+}
+
+func Login(w http.ResponseWriter, r *http.Request) {
+	var user model.UserModel
+	err := json.NewDecoder(r.Body).Decode(&user)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	user1 := db.LoginUser(model.UserDbFormat(user))
+	//fmt.Println("hurrrrreeeeeeeeeeeeee", user1)
+
+	if user1 != nil {
+		tokenString, err := middleware.GenerateJWT(user1.Mail, user1.UserType, user1.ID)
+		if err == nil {
+
+			w.WriteHeader(http.StatusOK)
+			json.NewEncoder(w).Encode(tokenString)
+			return
+		}
+
+		w.WriteHeader(http.StatusUnauthorized)
+		json.NewEncoder(w).Encode(err)
+		return
+	}
+
+	w.WriteHeader(http.StatusUnauthorized)
+	json.NewEncoder(w).Encode(nil)
+	return
 
 }

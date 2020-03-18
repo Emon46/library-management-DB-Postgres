@@ -1,4 +1,4 @@
-package pkg
+package middleware
 
 import (
 	"fmt"
@@ -42,8 +42,8 @@ func JwtMiddleWare(next http.Handler) http.Handler {
 				})
 				//checking if there is any claim and s the token valid
 				if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-					fmt.Println("validity : ok")
-					fmt.Println(claims)
+					fmt.Println("user validity : ok jwt")
+					//fmt.Println(claims)
 					//retrieving the claims info
 
 					userId, okId := claims["userId"].(float64)
@@ -57,7 +57,7 @@ func JwtMiddleWare(next http.Handler) http.Handler {
 						r.Header.Set("current_user_id", string(CurrentUserId))
 						r.Header.Set("current_user_type", string(CurrentUserType))
 						r.Header.Set("current_user_mail", string(CurrentUserMail))
-						fmt.Println(CurrentUserId, CurrentUserMail, CurrentUserType, okMail, okType)
+						//fmt.Println(CurrentUserId, CurrentUserMail, CurrentUserType, okMail, okType)
 						next.ServeHTTP(w, r)
 					} else {
 						w.WriteHeader(http.StatusNotAcceptable)
@@ -90,6 +90,7 @@ func GenerateJWT(userMail string, userType string, userId int) (string, error) {
 	if err != nil {
 		return "", err
 	}
+	//fmt.Println("otkkkkkkkkkkkkkkkeeeeeeeeennnnn", tokeString)
 	return tokeString, err
 
 }

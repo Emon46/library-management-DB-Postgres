@@ -21,8 +21,8 @@ var DBName = "library_management"
 
 func init() {
 	tables = append(tables, new(model.UserDb),
-		new(BookDb),
-		new(BookHistoryDb))
+		new(model.Bookdb),
+		new(model.BookHistoryDb))
 
 	var err error
 	eng, err = GetPostgresClient()

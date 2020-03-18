@@ -5,40 +5,37 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/emon331046/libraryManagement/pkg/middleware"
+
 	"github.com/emon331046/libraryManagement/pkg/api"
 
-	"github.com/emon331046/libraryManagement/pkg"
 	"github.com/gorilla/mux"
 )
 
 func main() {
 
 	r := mux.NewRouter()
-	r.Use(pkg.JwtMiddleWare)
+	r.Use(middleware.JwtMiddleWare)
 
-	//r.HandleFunc("/login", pkg.Login).
-	//	Methods("GET")
+	r.HandleFunc("/login", api.Login).
+		Methods("GET")
 	r.HandleFunc("/register", api.Register).
 		Methods("POST")
 	r.HandleFunc("/user-profile/{user_id}", api.UserProfile).
 		Methods("Get")
-	//r.HandleFunc("/edit-profile/{user_id}", pkg.EditUserProfile).
-	//	Methods("PATCH")
-	////r.Handle("/edit-profile/{user_id}", AuthMiddleware(pkg.EditUserProfile(), "user")).
-	////	Methods("PATCH")
-	//r.HandleFunc("/book", book.AddNewBook).
-	//	Methods("POST")
-	//r.HandleFunc("/book", book.ShowAllBooks).
-	//	Methods("Get")
-	//r.HandleFunc("/book/{book_id}", book.ShowBook).
-	//	Methods("Get")
-	////http.HandleFunc("/df",fu)
-	//
-	//r.HandleFunc("/purchase-book", book.AddNewPurchase).
-	//	Methods("POST")
-	//r.HandleFunc("/return-book", book.ReturnBook).
-	//	Methods("PUT")
-	//r.HandleFunc("/delete-book/{book_id}", book.DeleteBook)
+	r.HandleFunc("/edit-profile", api.EditUserProfile).
+		Methods("PATCH")
+	r.HandleFunc("/book", api.AddNewBook).
+		Methods("POST")
+	r.HandleFunc("/book", api.ShowAllBooks).
+		Methods("Get")
+	r.HandleFunc("/book/{book_id}", api.ShowBook).
+		Methods("Get")
+	r.HandleFunc("/purchase-book", api.AddNewPurchase).
+		Methods("POST")
+	r.HandleFunc("/return-book", api.ReturnBook).
+		Methods("PUT")
+	r.HandleFunc("/delete-book/{book_id}", api.DeleteBook)
 	http.Handle("/", r)
 	srv := &http.Server{
 		Handler: r,
