@@ -1,59 +1,49 @@
 package api
 
 import (
-	"encoding/json"
-	"fmt"
 	"net/http"
 
-	"github.com/emon331046/libraryManagement/pkg/db"
-	"github.com/emon331046/libraryManagement/pkg/model"
+	"gopkg.in/macaron.v1"
+
+	"github.com/Emon331046/libraryManagement/pkg/db"
+	"github.com/Emon331046/libraryManagement/pkg/model"
 )
 
-func AddNewPurchase(w http.ResponseWriter, r *http.Request) {
+func AddNewPurchase(ctx *macaron.Context, bookHistory model.BookHistoryDb) {
 	//_, err := strconv.Atoi(r.Header.Get("current_user_id"))
-	currentUserType := r.Header.Get("current_user_type")
+	currentUserType := ctx.Req.Header.Get("current_user_type")
 	if currentUserType != "admin" {
-
-		http.Error(w, "only admin can update purchase book info", http.StatusBadGateway)
+		ctx.JSON(http.StatusBadGateway, "only admin can update purchase book info")
 		return
 	}
-	var bookHistory model.BookHistoryDb
-	json.NewDecoder(r.Body).Decode(&bookHistory)
 	userId := bookHistory.UserId
 	bookId := bookHistory.BookId
 	resultPurchase, err := db.AddNewPurchase(userId, bookId)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
 
+		ctx.JSON(http.StatusBadRequest, err.Error())
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resultPurchase)
+	ctx.JSON(http.StatusOK, resultPurchase)
 
 }
 
-func ReturnBook(w http.ResponseWriter, r *http.Request) {
+func ReturnBook(ctx *macaron.Context, bookHistory model.BookHistoryDb) {
 	//_, err := strconv.Atoi(r.Header.Get("current_user_id"))
-	currentUserType := r.Header.Get("current_user_type")
+	currentUserType := ctx.Req.Header.Get("current_user_type")
 	if currentUserType != "admin" {
 
-		http.Error(w, "user type didn't match", http.StatusUnauthorized)
+		ctx.JSON(http.StatusUnauthorized, "user type didn't match")
 		return
 	}
-	//fmt.Println("kdsfh")
 
-	var bookHistory model.BookHistoryDb
-	json.NewDecoder(r.Body).Decode(&bookHistory)
 	userId := bookHistory.UserId
 	bookId := bookHistory.BookId
-	fmt.Println(bookId)
 
 	result, err := db.ReturnBookMethod(userId, bookId)
 	if err != nil {
-		http.Error(w, "can't execute return request", http.StatusBadGateway)
+		ctx.JSON(http.StatusBadGateway, "can't execute return request")
 	}
-
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(result)
+	ctx.JSON(http.StatusCreated, result)
 
 }

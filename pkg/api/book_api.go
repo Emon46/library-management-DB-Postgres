@@ -1,96 +1,94 @@
 package api
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
 
-	"github.com/gorilla/mux"
+	"gopkg.in/macaron.v1"
 
-	"github.com/emon331046/libraryManagement/pkg/db"
-	"github.com/emon331046/libraryManagement/pkg/model"
+	"github.com/Emon331046/libraryManagement/pkg/db"
+	"github.com/Emon331046/libraryManagement/pkg/model"
 )
 
-func AddNewBook(w http.ResponseWriter, r *http.Request) {
+func AddNewBook(ctx *macaron.Context, book model.Bookdb) {
 	//_, err := strconv.Atoi(r.Header.Get("current_user_id"))
-	currentUserType := r.Header.Get("current_user_type")
+	currentUserType := ctx.Req.Header.Get("current_user_type")
 	if currentUserType != "admin" {
 
-		http.Error(w, "unmatched type ", http.StatusBadGateway)
+		ctx.JSON(http.StatusBadGateway, "unmatched type ")
 		return
 	}
-	var book model.Bookdb
-	err1 := json.NewDecoder(r.Body).Decode(&book)
+
 	fmt.Println(book)
-	if err1 != nil {
-		return
-	}
 
 	resultBook, err := db.AddBook(book)
 	if err != nil {
 
-		http.Error(w, err.Error(), http.StatusBadGateway)
+		ctx.JSON(http.StatusBadGateway, err.Error())
 		return
 	}
 
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(resultBook)
+	ctx.JSON(http.StatusCreated, resultBook)
 
 }
-func ShowAllBooks(w http.ResponseWriter, r *http.Request) {
+func ShowAllBooks(ctx *macaron.Context) {
 
 	resultBooks, err := db.ShowAllBooks()
 	if err != nil {
 
-		w.WriteHeader(http.StatusBadGateway)
-		json.NewEncoder(w).Encode(resultBooks)
+		ctx.JSON(http.StatusBadGateway, err.Error())
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resultBooks)
+	ctx.JSON(http.StatusOK, resultBooks)
+	return
 
 }
-func ShowBook(w http.ResponseWriter, r *http.Request) {
-	key := mux.Vars(r)["book_id"]
+func ShowBook(ctx *macaron.Context) {
+	key := ctx.Params(":bookId")
+	fmt.Println(key)
 	bookId, err1 := strconv.Atoi(key)
+	fmt.Println("*********hello from show book**********", key, bookId)
 	if err1 != nil {
-		http.Error(w, err1.Error(), http.StatusBadGateway)
+		ctx.JSON(http.StatusBadGateway, err1.Error())
 		return
 	}
 	resultBook, err := db.ShowBook(bookId)
 	if err != nil {
 
-		http.Error(w, err.Error(), http.StatusBadGateway)
+		ctx.JSON(http.StatusBadGateway, err.Error())
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resultBook)
+	ctx.JSON(http.StatusOK, resultBook)
 
 }
 
-func DeleteBook(w http.ResponseWriter, r *http.Request) {
+func DeleteBook(ctx *macaron.Context) {
 	//_, err := strconv.Atoi(r.Header.Get("current_user_id"))
-	currentUserType := r.Header.Get("current_user_type")
+	currentUserType := ctx.Req.Header.Get("current_user_type")
 	if currentUserType != "admin" {
 
-		http.Error(w, "user is not admin", http.StatusBadRequest)
+		ctx.JSON(http.StatusBadRequest, "user is not admin")
 		return
 	}
 
-	book_id, _ := strconv.Atoi(mux.Vars(r)["book_id"])
+	//book_id, _ := strconv.Atoi(mux.Vars(r)["book_id"])
+	book_id, err2 := strconv.Atoi(ctx.Params(":bookId"))
+	if err2 != nil {
+
+		ctx.JSON(http.StatusBadGateway, err2.Error())
+	}
 	fmt.Println(book_id)
 
 	_, err := db.DeleteBookMethod(book_id)
 	if err == nil {
-		w.WriteHeader(http.StatusResetContent)
+		ctx.JSON(http.StatusResetContent, "book has been deleted")
 
-		w.Write([]byte("book has been deleted"))
 		return
 	}
-	http.Error(w, err.Error(), http.StatusBadGateway)
+	ctx.JSON(http.StatusBadGateway, err.Error())
 	return
 
 }

@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/emon331046/libraryManagement/pkg/model"
+	"github.com/Emon331046/libraryManagement/pkg/model"
 )
 
 func AddBook(book model.Bookdb) (*model.Bookdb, error) {

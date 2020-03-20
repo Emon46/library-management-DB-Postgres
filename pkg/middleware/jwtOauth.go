@@ -7,71 +7,72 @@ import (
 	"strings"
 	"time"
 
+	"gopkg.in/macaron.v1"
+
 	jwt "github.com/dgrijalva/jwt-go"
 )
 
 var MySigningKey = []byte("secret1234")
 
-func JwtMiddleWare(next http.Handler) http.Handler {
+func JwtMiddleWare(ctx *macaron.Context) {
 
 	fmt.Println("here middleware ")
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 
-		fmt.Println(r.URL.Path)
+	fmt.Println(ctx.Req.URL.Path)
 
-		//if get then here i have given access the user with or without token
-		if r.Method == "GET" || r.URL.Path == "/register" {
-			log.Println(r.Method, "request")
-			next.ServeHTTP(w, r)
+	//if get then here i have given access the user with or without token
+	if ctx.Req.Method == "GET" || ctx.Req.URL.Path == "/register" {
+		log.Println(ctx.Req.Method, "request")
+		ctx.Next()
+	} else {
+		//in case of other write operation i need to check if the user is valid
+		fmt.Println("checking with jwt middleware")
+
+		//retrieve the auth header
+		authHeader := ctx.Req.Header.Get("Authorization")
+		//if there is no auth header
+		if authHeader == "" {
+			ctx.JSON(http.StatusUnauthorized, "need auth token")
+			return
 		} else {
-			//in case of other write operation i need to check if the user is valid
-			fmt.Println("checking with jwt middleware")
 
-			//retrieve the auth header
-			authHeader := r.Header.Get("Authorization")
-			//if there is no auth header
-			if authHeader == "" {
-				w.WriteHeader(http.StatusUnauthorized)
-				w.Write([]byte("need auth token"))
-				return
-			} else {
+			// parsing the token from (bearer tokenString) with the secret key
+			token, _ := jwt.Parse(strings.Split(authHeader, " ")[1], func(token *jwt.Token) (interface{}, error) {
+				return MySigningKey, nil
+			})
+			//checking if there is any claim and s the token valid
+			if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+				fmt.Println("user validity : ok jwt")
 
-				// parsing the token from (bearer tokenString) with the secret key
-				token, _ := jwt.Parse(strings.Split(authHeader, " ")[1], func(token *jwt.Token) (interface{}, error) {
-					return MySigningKey, nil
-				})
-				//checking if there is any claim and s the token valid
-				if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-					fmt.Println("user validity : ok jwt")
-					//fmt.Println(claims)
-					//retrieving the claims info
+				//fmt.Println(claims)
+				//retrieving the claims info
+				userId, okId := claims["userId"].(float64)
 
-					userId, okId := claims["userId"].(float64)
+				//as i have set it capital i can use it outside the package
+				CurrentUserId := int(userId)
+				CurrentUserMail, okMail := claims["userMail"].(string)
+				CurrentUserType, okType := claims["userType"].(string)
 
-					//as i have set it capital i can use it outside the package
-					CurrentUserId := int(userId)
-					CurrentUserMail, okMail := claims["userMail"].(string)
-					CurrentUserType, okType := claims["userType"].(string)
+				if okId && okMail && okType {
 
-					if okId && okMail && okType {
-						r.Header.Set("current_user_id", string(CurrentUserId))
-						r.Header.Set("current_user_type", string(CurrentUserType))
-						r.Header.Set("current_user_mail", string(CurrentUserMail))
-						//fmt.Println(CurrentUserId, CurrentUserMail, CurrentUserType, okMail, okType)
-						next.ServeHTTP(w, r)
-					} else {
-						w.WriteHeader(http.StatusNotAcceptable)
-						w.Write([]byte("the token is not valid .missing some info"))
-					}
-
+					ctx.Req.Header.Set("current_user_id", string(CurrentUserId))
+					ctx.Req.Header.Set("current_user_type", string(CurrentUserType))
+					ctx.Req.Header.Set("current_user_mail", string(CurrentUserMail))
+					//fmt.Println(CurrentUserId, CurrentUserMail, CurrentUserType, okMail, okType)
+					ctx.Next()
 				} else {
-					w.WriteHeader(http.StatusUnauthorized)
-					w.Write([]byte("need auth token"))
+
+					ctx.JSON(http.StatusNotAcceptable, "the token is not valid .missing some info")
 					return
 				}
+
+			} else {
+
+				ctx.JSON(http.StatusUnauthorized, "need auth token")
+				return
 			}
 		}
-	})
+	}
 }
 
 func GenerateJWT(userMail string, userType string, userId int) (string, error) {
